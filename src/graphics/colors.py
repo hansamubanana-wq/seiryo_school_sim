@@ -18,13 +18,12 @@ class FontManager:
     def _find_japanese_font(self):
         """利用可能な日本語フォントを探す"""
         available = pygame.font.get_fonts()
-        # configの優先順位順に探す
         for target in config.FONT_NAMES:
             target_clean = target.lower().replace(" ", "")
             for sys_font in available:
                 if target_clean in sys_font.lower().replace(" ", ""):
                     return sys_font
-        return None # 見つからなければデフォルト
+        return None
         
     def get_font(self, size: int) -> pygame.font.Font:
         if size not in self._fonts:
@@ -52,6 +51,11 @@ class Colors:
     
     UI_TEXT = (50, 50, 50)            # 通常テキスト
     UI_TEXT_DARK = (20, 20, 20)       # 濃いテキスト
+    
+    # ★ここが消えていました！復活させたボタン設定
+    BUTTON_NORMAL = (230, 230, 230)   # 通常時のボタン色
+    BUTTON_HOVER = (200, 200, 200)    # ホバー時のボタン色
+    BUTTON_TEXT = (20, 20, 20)        # ボタンの文字色
     
     # アクセントカラー
     ACCENT_GREEN = (46, 204, 113)     # 雇用ボタンなど
