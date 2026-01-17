@@ -7,7 +7,7 @@ from typing import List, Optional
 import config
 from src.entities.teacher import Teacher
 from src.entities.student import Student
-from src.entities.facility import Facility  # 追加
+from src.entities.facility import Facility
 
 @dataclass
 class School:
@@ -19,7 +19,7 @@ class School:
 
     teachers: List[Teacher] = field(default_factory=list)
     students: List[Student] = field(default_factory=list)
-    facilities: List[Facility] = field(default_factory=list)  # 追加: 施設リスト
+    facilities: List[Facility] = field(default_factory=list)
 
     # 宣伝効果（0-100）
     promotion_effect: float = 0.0
@@ -29,8 +29,6 @@ class School:
     _cached_satisfaction: Optional[float] = field(default=None, repr=False)
 
     def __post_init__(self):
-        # 初期配置（本校舎）を仮想的に追加
-        # ※本来はfacilitiesに追加すべきですが、初期マップ描画用に一旦保留
         pass
 
     def invalidate_cache(self) -> None:
@@ -123,7 +121,7 @@ class School:
         
         material_cost = self.student_count * config.MATERIAL_COST_PER_STUDENT
         fixed_cost = config.FIXED_MONTHLY_COST
-        return teacher_salary + base_maintenance + facility_maintenance + material_cost + fixed_cost
+        return int(teacher_salary + base_maintenance + facility_maintenance + material_cost + fixed_cost)
 
     @property
     def monthly_balance(self) -> int:
@@ -162,8 +160,9 @@ class School:
         if not data: return False
         cost = data['cost']
         
-        if self.money >= cost:
-            self.money -= cost
+        # can_affordを使ってチェック
+        if self.can_afford(cost):
+            self.spend(cost) # spendを使って支払い
             new_facility = Facility(type_id, grid_x, grid_y)
             self.facilities.append(new_facility)
             
@@ -173,6 +172,23 @@ class School:
             self.invalidate_cache()
             return True
         return False
-        
+
+    # === ここから復活させたメソッド ===
+    def can_afford(self, cost: int) -> bool:
+        """支払い可能かチェック"""
+        return self.money >= cost
+
+    def spend(self, amount: int) -> bool:
+        """支出処理"""
+        if self.can_afford(amount):
+            self.money -= amount
+            return True
+        return False
+
+    def receive(self, amount: int) -> None:
+        """収入処理"""
+        self.money += amount
+
     def is_bankrupt(self) -> bool:
+        """破産判定"""
         return self.money <= config.BANKRUPTCY_THRESHOLD
